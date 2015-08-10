@@ -6,6 +6,13 @@
 #include <SD.h>
 #include <MIDI.h>
 
+
+
+const int analogInPin1 = A2;
+const int analogInPin2 = A3;
+const int analogInPin3 = A6;
+const int analogInPin4 = A7;
+
 // ------------------------------------------------------
 // GUItool: begin automatically generated code
 AudioSynthWaveform       waveformLfo1;   
@@ -58,7 +65,7 @@ const int lfo2Base = 2;
 
 // filter settings
 const int maxFilterResonance = 5;
-const int maxFilterFrequency = oscMaxFrequency + 500;
+const int maxFilterFrequency = 8000;
 const float minFilterResonance = 0.7;
 
 // lfo waveforms
@@ -85,7 +92,11 @@ int osc1Waveform = WAVEFORM_SQUARE;
 int osc2Waveform = WAVEFORM_TRIANGLE;
 boolean isOsc1WaveformSquare = true;
 boolean isOsc2WaveFormTriangle = true;
-float outPutVolume = 0.5;
+float outPutVolume = .7;
+
+// use analog sensors 
+
+boolean useAnalog = true;
 
 // ------------------------------------------------------
 // init audio, midi and other stuff
@@ -95,6 +106,7 @@ void setup() {
     
     //output serial stuff ad 96k 
     Serial.begin(9600);  
+    
     
     // Init audio  stufff
     initAudioStuff();
@@ -197,7 +209,12 @@ void OnControlChange(byte channel, byte control, byte value){
 // ------------------------------------------------------
 // Main 
 void loop() {
-  usbMIDI.read(); 
+  //usbMIDI.read(); 
+   
+  if(useAnalog) {
+    readAnalog();
+   
+  }
 }
 
 // ------------------------------------------------------
@@ -237,11 +254,11 @@ void initWaveformsAndOtherThings() {
     waveformLfo2.begin(1, lfo2Speed , waveformLfoSquare); // square lfo
 
     // set mixer  
-    oscMixer.gain(0, 0.5);
-    oscMixer.gain(1, 0.5);
+    oscMixer.gain(0, 1);
+    oscMixer.gain(1, 1);
 
     // set mix for lfo
-    lfoMixer.gain(0, 0);
+    lfoMixer.gain(0, 1);
     
     //filter things
     filter.frequency(filterFrequency);
@@ -252,26 +269,59 @@ void initWaveformsAndOtherThings() {
 
   
 
-
-  //----------------------------------------------------------------------
+void readAnalog() {
   // Read the analog sensors
-//
-//  int analogVal1 =  analogRead(analogInPin1); // osc freq
-//  int analogVal2 =  analogRead(analogInPin2); // osc freq 2
-//  int analogVal3 =  analogRead(analogInPin3); // ??
-//  int analogVal4 =  analogRead(analogInPin4); // ?? 
-//  int analogVal4 =  analogRead(analogInPin4); // ?? 
-//  int analogVal4 =  analogRead(analogInPin4); // ?? 
+  int analogVal1 =  analogRead(analogInPin1); // osc freq
+  int analogVal2 =  analogRead(analogInPin2); // osc freq 2
+  int analogVal3 =  analogRead(analogInPin3); // lfo speeds
+  int analogVal4 =  analogRead(analogInPin4); // filter frequency 
 
+  // osc frequency
+  int freq1 =  map(analogVal1 , 0, 4096, 0, oscMaxFrequency );
+  waveformOsc1.frequency(freq1);
+  
+  int freq2 =  map(analogVal2 , 0, 4096, 0, oscMaxFrequency );
+  waveformOsc2.frequency(freq2);
 
-  //----------------------------------------------------------------------
-  // Read the analog sensors
-  // Map to freq range
+//  osc mixer
+//  float oscMixer =  mapfloat(analogVal3 , 0, 4096, 0, 1);
+//  oscMixer.gain(0, oscMixer);
+//  oscMixer.gain(1, 1-oscMixer);           
+  
+  // lfo 1
+   int lfo1Speed = map(analogVal3 , 0, 4096,0, maxLfo1Speed);
+   waveformLfo1.frequency(lfo1Speed);
+     
+  // lfo 2
+  int lfo2Speed = map(analogVal3, 0, 4096,1, maxLfo2Speed); 
+  lfo2Speed = pow(lfo2Base,lfo2Speed) * lfo1Speed;
+  waveformLfo2.frequency(lfo2Speed);
+
+  // filter frequency
+  int filterFrequency = map(analogVal4, 0, 4096,0, maxFilterFrequency); 
+  filter.frequency(filterFrequency);
+
+if (Serial) {
+  // print stuff to serial bus
+  //delay(500);
+//Serial.println( ("osc 1 frequency: " +freq1));
+//Serial.println(("osc 2 frequency: " + freq2));
+//Serial.println(("lfo 1 Speed: " + lfo1Speed));
+//Serial.println(("lfo 2 Speed: " + lfo2Speed));
+//Serial.println(("filter Frequency: " + filterFrequency));
+
+Serial.println(freq1);
+Serial.println(freq2);
+Serial.println(lfo1Speed);
+Serial.println(lfo2Speed);
+Serial.println(filterFrequency);
+
+Serial.println(("---------------------------------------------"));
+ delay(200);  // do not print too fast!
  
-//    int freq1 =  map(analogVal1 , 0, 4096, 10, 370 );
-//    int freq2 =  map(analogVal2 , 0, 4096, 10, 370 );
-//   
-//    float oscMixer =  mapfloat(analogVal3 , 0, 4096, 0, 10);
-//    int lfo2Speed =  map(analogVal3, 0, 4096, 0, 24);
-//    int lfo2Speed =  map(analogVal3, 0, 4096, 0, 24);
+}
+
+  
+}
+ 
 
