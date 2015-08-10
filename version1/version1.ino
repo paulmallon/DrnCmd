@@ -62,10 +62,10 @@ const int oscMaxFrequency  = 375;
 const int maxLfo1Speed = 20;
 const int maxLfo2Speed = 16;
 const int lfo2Base = 2;
+const int maxLfo2SpeedExponent = 4;
 
 // filter settings
 const int maxFilterResonance = 5;
-const int maxFilterFrequency = 8000;
 const float minFilterResonance = 0.7;
 
 // lfo waveforms
@@ -91,12 +91,18 @@ int osc2Frequency = 0;
 int osc1Waveform = WAVEFORM_SQUARE; 
 int osc2Waveform = WAVEFORM_TRIANGLE;
 boolean isOsc1WaveformSquare = true;
-boolean isOsc2WaveFormTriangle = true;
+boolean isOsc1WaveformTriangle = true;
+
+boolean isOsc2WaveformSquare = true;
+boolean isOsc2WaveformTriangle = true;
+
 float outPutVolume = .7;
 
 // use analog sensors 
 
-boolean useAnalog = true;
+boolean useAnalog = false;
+boolean useWideFilterRange = false;
+int maxFilterFrequency = 5000;
 
 // ------------------------------------------------------
 // init audio, midi and other stuff
@@ -120,100 +126,153 @@ void setup() {
 // Read midi cc data
 
 void OnControlChange(byte channel, byte control, byte value){ 
-  int newIntVal, tempVal = 0;
+  Serial.println("Midi cc input");
+  int newIntVal = 0;
   float newFloatVal = 0;
-    
-  switch (control) { 
+
+  int controler = control + 1;
+
+  switch (controler) { 
     case osc1CC: //osc1 freq
+    Serial.println("osc1CC");
        newIntVal = map(value, 0, 127,0, oscMaxFrequency);
        waveformOsc1.frequency(newIntVal);
+       Serial.println(newIntVal);
     break;
     
     case osc2CC: //osc2 freq
+      Serial.println("osc2CC");
        newIntVal = map(value, 0, 127,0, oscMaxFrequency);
        waveformOsc2.frequency(newIntVal);
+       Serial.println(newIntVal);
     break;
   
     case oscMixCC: //osc mix
+      Serial.println("oscMixCC");
       newFloatVal = mapfloat(value, 0, 127,0, 1);
       oscMixer.gain(0, newFloatVal);
-      oscMixer.gain(1, 1-newFloatVal);           
+      oscMixer.gain(1, 1-newFloatVal);
+      Serial.println("Osc 1 gain");
+      Serial.println(newFloatVal); 
+      Serial.println("Osc 2 gain");
+      Serial.println(1-newFloatVal);           
     break;
   
     case lfo1CC: // lfo 1 speed
+      Serial.println("lfo1CC");
       newIntVal = map(value, 0, 127,0, maxLfo1Speed);
       waveformLfo1.frequency(newIntVal);
+      Serial.println(newIntVal);
     break;
 
     case lfo2CC: // lfo 2 speed - 2, 4, 8, 16
-      tempVal = map(value, 0, 127,0, maxLfo1Speed);
-      newIntVal = map(value, 0, 127,1, maxLfo2Speed); 
-      waveformLfo2.frequency(pow(lfo2Base,newIntVal) * tempVal);
+      Serial.println("lfo2CC");
+      Serial.println("Mapped value");
+      newIntVal = map(value, 0, 127,0, maxLfo2SpeedExponent);
+      Serial.println(newIntVal);
+      Serial.println("Converted value");
+      newIntVal = pow(lfo2Base,newIntVal);
+      Serial.println(newIntVal);
+      waveformLfo2.frequency(newIntVal);
+      
     break;
     
     case shapeCC: //lfo effect on  filter
+    Serial.println("shapeCC");
        newFloatVal = mapfloat(value, 0, 127,0, 1);
        lfoMixer.gain(0, newFloatVal);
+       Serial.println(newFloatVal);
     break;
   
     case pulseCC: // lfo depth of modulation of  filter
+        Serial.println("pulseCC");
         newFloatVal = mapfloat(value, 0, 127, 0, 1);      
         waveformLfo2.amplitude(newFloatVal);
+        Serial.println(newFloatVal);
     break;
   
     case filterFrequencyCC: // filter frequency
+    Serial.println("filterFrequencyCC");
        newIntVal = map(value, 0, 127, 0, maxFilterFrequency );
        filter.frequency(newIntVal);
+       Serial.println(newIntVal);
     break;
   
     case filterResonanceCC: // filter resonance
+    Serial.println("filterResonanceCC");
       newFloatVal = mapfloat(value, 0, 127, minFilterResonance, maxFilterResonance );
       filter.resonance(newFloatVal);
+      Serial.println(newFloatVal);
     break;
 
     case volumeCC: // set audioSheield volume
-      newFloatVal = mapfloat(value, 0, 127, 0, volumeCC );
+      Serial.println("volumeCC");
+      newFloatVal = mapfloat(value, 0, 127, 0, 1 );
       audioShield.volume(newFloatVal);
+      Serial.println(newFloatVal);
     break;
 
     case osc1WaveformCC: // change osc 1 waveform
-     newIntVal = map(value, 0, 127, 0, 1 );
-
-    if(newIntVal == 0) {     
-      if(isOsc1WaveformSquare) {    
-          //change to trigangle
+      Serial.println("osc1WaveformCC");
+      newIntVal = map(value, 0, 127, 0, 10 );
+      Serial.println(newIntVal);  
+      if(newIntVal >= 5) {
+        if(isOsc1WaveformSquare) {
+          Serial.println("change osc 1 to triangle");    
           waveformOsc1.begin(WAVEFORM_TRIANGLE);
           isOsc1WaveformSquare = false;
-      } else {       
-          // do nothing   - already set to square     
+          isOsc1WaveformTriangle = true;
+        }
+      } else {
+        if(isOsc1WaveformTriangle) {
+            Serial.println("change osc 1 to square");
+            waveformOsc1.begin(WAVEFORM_SQUARE);
+
+            isOsc1WaveformSquare = true;
+            isOsc1WaveformTriangle = false;
+        }
       }
-    }
+
+    
     break;
 
     case osc2WaveformCC: // change osc2 waveform
-      newIntVal = map(value, 0, 127, 0, 1 );
-
-      if(newIntVal == 0) {     
-        if(isOsc2WaveFormTriangle) {    
-            //change to trigangle
+    Serial.println("osc2WaveformCC");
+      newIntVal = map(value, 0, 127, 0, 10 );
+      Serial.println(newIntVal);  
+      if(newIntVal >= 5) {
+        if(isOsc2WaveformSquare) {
+          Serial.println("change osc 2 to triangle");    
+          waveformOsc2.begin(WAVEFORM_TRIANGLE);
+          isOsc2WaveformSquare = false;
+          isOsc2WaveformTriangle = true;
+        }
+      } else {
+        if(isOsc2WaveformTriangle) {
+            Serial.println("change osc 2 to square");
             waveformOsc2.begin(WAVEFORM_SQUARE);
-            isOsc2WaveFormTriangle = false;
-       } else {       
-            // do nothing - already set to triangle       
+
+            isOsc2WaveformSquare = true;
+            isOsc2WaveformTriangle = false;
+        }
       }
-    } 
+
     break;
   }
+
+
+  Serial.println(controler);
+  Serial.println(value);
+
 }
 
 // ------------------------------------------------------
 // Main 
 void loop() {
-  //usbMIDI.read(); 
+  usbMIDI.read(); 
    
   if(useAnalog) {
     readAnalog();
-   
   }
 }
 
@@ -237,14 +296,20 @@ void initAudioStuff() {
     AudioInterrupts();
 }
 void initWaveformsAndOtherThings() {
+  
     // init waveform for osc 1
     waveformOsc1.pulseWidth(0);
     waveformOsc1.begin(1, osc1Frequency, osc1Waveform); 
 
+    isOsc1WaveformSquare = true;
+    isOsc1WaveformTriangle = false;
+
    // init waveform for osc 2
     waveformOsc2.pulseWidth(0);
     waveformOsc2.begin(1, osc2Frequency, osc2Waveform); 
-
+    
+    isOsc2WaveformSquare = false;
+    isOsc2WaveformTriangle = true;
     // init lfo waveforms
     waveformLfo1.pulseWidth(0);
     waveformLfo1.begin(1, lfo1Speed , waveformLfoSawtooth);  //saw lfo
@@ -259,6 +324,12 @@ void initWaveformsAndOtherThings() {
 
     // set mix for lfo
     lfoMixer.gain(0, 1);
+
+    if(useWideFilterRange) {
+     maxFilterFrequency = 10000;
+    } else {
+       maxFilterFrequency = 5000;
+    }
     
     //filter things
     filter.frequency(filterFrequency);
