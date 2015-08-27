@@ -212,6 +212,7 @@ void OnControlChange(byte channel, byte control, byte value){
       Serial.println("volumeCC");
       newFloatVal = mapfloat(value, 0, 127, 0, 1 );
       audioShield.volume(newFloatVal);
+       Serial.println(newFloatVal);
     break;
 
     case osc1WaveformCC: // change osc 1 waveform
