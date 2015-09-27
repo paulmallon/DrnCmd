@@ -1,9 +1,5 @@
-
 #include <MIDI.h>
-
-#include <SPI.h>
-#include <SD.h>
-
+MIDI_CREATE_DEFAULT_INSTANCE();
 
 
 
@@ -18,11 +14,11 @@ const int ledVal = 500; // default led value
  
  
 void setup() {
-  
+MIDI.begin() ;
   Serial.begin(9600);
   
   //set upp midi handles
-  usbMIDI.setHandleControlChange(OnControlChange);
+  MIDI.setHandleControlChange(OnControlChange);
     
   // set pin modes  
   pinMode(button1, INPUT_PULLUP);
@@ -35,20 +31,20 @@ void setup() {
 
 void loop() {
    
-  usbMIDI.read(); 
+  MIDI.read(); 
    
   int buttonVal = digitalRead(button1);   
   int teleJackVal = digitalRead(teleJack1);   
 
   if(buttonVal == 0 ||  teleJackVal == 0 ) {
-    analogWrite(ledPin, ledVal / 4);  
+    analogWrite(led, ledVal / 4);  
     delay(100);
-    analogWrite(ledPin, 0);  
+    analogWrite(led, 0);  
     delay(50);
-    analogWrite(ledPin, ledVal / 2);  
+    analogWrite(led, ledVal / 2);  
     delay(100);  
   } else {
-        analogWrite(ledPin, ledVal);  
+        analogWrite(led, ledVal);  
         delay(500);
   }
 }
@@ -56,7 +52,7 @@ void loop() {
 
 void OnControlChange(byte channel, byte control, byte value){ 
   
-  }
+}
 
 
   
