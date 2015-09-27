@@ -1,5 +1,5 @@
-#include <MIDI.h>
-MIDI_CREATE_DEFAULT_INSTANCE();
+//#include <MIDI.h>
+//MIDI_CREATE_DEFAULT_INSTANCE();
 
 
 
@@ -14,39 +14,49 @@ const int ledVal = 500; // default led value
  
  
 void setup() {
-MIDI.begin() ;
+ // MIDI.begin(8) ;
   Serial.begin(9600);
   
   //set upp midi handles
-  MIDI.setHandleControlChange(OnControlChange);
+  //MIDI.setHandleControlChange(OnControlChange);
     
   // set pin modes  
   pinMode(button1, INPUT_PULLUP);
   pinMode(teleJack1, INPUT_PULLUP);     
   pinMode(led, OUTPUT);   
-  analogWrite(led, 40);  
+  analogWrite(led, 50);  
 }
 
 
 
 void loop() {
    
-  MIDI.read(); 
+ // MIDI.read(); 
    
   int buttonVal = digitalRead(button1);   
   int teleJackVal = digitalRead(teleJack1);   
 
-  if(buttonVal == 0 ||  teleJackVal == 0 ) {
-    analogWrite(led, ledVal / 4);  
-    delay(100);
-    analogWrite(led, 0);  
-    delay(50);
-    analogWrite(led, ledVal / 2);  
-    delay(100);  
-  } else {
-        analogWrite(led, ledVal);  
-        delay(500);
-  }
+  
+  
+  if(buttonVal == 0 ) 
+  {
+   Serial.println ("Button pressed");
+   analogWrite(led, 0);
+   delay(1000);
+  }  
+  
+  if(teleJackVal == 0 ) 
+  {
+   Serial.println ("Input form tele jack ");
+  }  
+  
+  
+      //  MIDI.sendControlChange(0,127,10); //cc1  on chan 10 
+     
+  
+  
+
+
 }
 
 
