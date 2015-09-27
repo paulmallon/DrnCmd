@@ -1,64 +1,62 @@
 
-int ledPin = 9;      // LED connected to digital pin 9
+#include <MIDI.h>
 
-int buttonPin = 2;   // potentiometer connected to analog pin 3
-
-
-int buttonPin2 = 3;   // potentiometer connected to analog pin 3
-
-int val = 0;         // variable to store the read value
+#include <SPI.h>
+#include <SD.h>
 
 
-int vala = 0;         // variable to store the read value
 
-int vala2 = 0;         // variable to store the read value
 
-void setup()
+const int led = 9;      // LED connected to digital pin 9
+const int button1 = 2;   // potentiometer connected to analog pin 3
+const int teleJack1 = 3;   // potentiometer connected to analog pin 3
+const int ledVal = 500; // default led value
 
-{
+
+
+ // -----------------------------------
+ 
+ 
+void setup() {
   
   Serial.begin(9600);
   
-  pinMode(buttonPin, INPUT_PULLUP);
-
-  pinMode(buttonPin2, INPUT_PULLUP);
-     
-         
-
- pinMode(ledPin, OUTPUT);   // sets the pin as output
-
-    analogWrite(ledPin, 40);  
+  //set upp midi handles
+  usbMIDI.setHandleControlChange(OnControlChange);
+    
+  // set pin modes  
+  pinMode(button1, INPUT_PULLUP);
+  pinMode(teleJack1, INPUT_PULLUP);     
+  pinMode(led, OUTPUT);   
+  analogWrite(led, 40);  
 }
 
 
 
-void loop()
+void loop() {
+   
+  usbMIDI.read(); 
+   
+  int buttonVal = digitalRead(button1);   
+  int teleJackVal = digitalRead(teleJack1);   
 
-{
+  if(buttonVal == 0 ||  teleJackVal == 0 ) {
+    analogWrite(ledPin, ledVal / 4);  
+    delay(100);
+    analogWrite(ledPin, 0);  
+    delay(50);
+    analogWrite(ledPin, ledVal / 2);  
+    delay(100);  
+  } else {
+        analogWrite(ledPin, ledVal);  
+        delay(500);
+  }
+}
 
-  vala = digitalRead(buttonPin);   
 
-
-  vala2 = digitalRead(buttonPin2);   
-
-
- Serial.println(vala);
-
-
+void OnControlChange(byte channel, byte control, byte value){ 
   
-  if(vala == 0 ||  vala2 == 0 ) {
-  val = 500;
-  analogWrite(ledPin, val / 4);  // analogRead values go from 0 to 1023, analogWrite values from 0 to 255
-  delay(100);
-  
-    analogWrite(ledPin, 0);  // analogRead values go from 0 to 1023, analogWrite values from 0 to 255   
-    analogWrite(ledPin, val / 2);  // analogRead values go from 0 to 1023, analogWrite values from 0 to 255
-      delay(100);
+  }
 
-} else {
-      analogWrite(ledPin, 600);  
-  delay(500);
-}
-}
 
   
