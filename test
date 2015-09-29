@@ -1,0 +1,82 @@
+//#include <MIDI.h>
+//MIDI_CREATE_DEFAULT_INSTANCE();
+
+
+
+const int led1 = 9;      // LED connected to digital pin 9
+const int button1 = 8;   // potentiometer connected to analog pin 3
+
+const int teleJack1 = 3;   // potentiometer connected to analog pin 3
+const int teleJack2 = 2;   // potentiometer connected to analog pin 3 
+
+const int ledVal = 500; // default led value
+
+
+
+ // -----------------------------------
+ 
+ 
+void setup() {
+  Serial.begin(9600);
+  
+    
+  // set pin modes  
+  pinMode(button1, INPUT_PULLUP);
+  pinMode(teleJack1, INPUT_PULLUP);     
+  pinMode(teleJack2, INPUT_PULLUP);     
+  pinMode(led1, OUTPUT);   
+  analogWrite(led1, 0);  
+}
+
+
+
+void loop() {
+   
+   
+  int buttonVal = digitalRead(button1);   
+  int teleJackVal1 = digitalRead(teleJack1);   
+  int teleJackVal2 = digitalRead(teleJack2);   
+  
+  
+  if(buttonVal == 0 ) 
+  {
+   Serial.println ("Button pressed");
+   analogWrite(led1, 128);
+   delay(50);
+  }  
+  
+  if(teleJackVal1 == 0 ) 
+  {
+   Serial.println ("Input form tele jack 1");
+     analogWrite(led1, 128);
+   delay(50);
+  }  
+
+
+  
+  if(teleJackVal2 == 0 ) 
+  {
+   Serial.println ("Input form tele jack 2");
+     analogWrite(led1, 128);
+   delay(500);
+
+  
+  }  
+  
+  
+  
+  
+     analogWrite(led1, 0);
+  
+  
+
+
+}
+
+
+void OnControlChange(byte channel, byte control, byte value){ 
+  
+}
+
+
+  
